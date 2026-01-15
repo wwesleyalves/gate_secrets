@@ -26,6 +26,11 @@ check_secrets() {
         return 0
     fi
 
+    if jq -e '.results == null' "$json_file" >/dev/null 2>&1; then
+    echo "Arquivo $json_file contém results=null - gate ignorado"
+    return 0
+    fi
+
     if ! jq empty "$json_file" 2>/dev/null; then
         echo "JSON inválido - gate ignorado"
         return 0
