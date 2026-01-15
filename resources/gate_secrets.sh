@@ -161,7 +161,7 @@ check_secrets() {
 }
 
 if check_secrets "cx_result.json"; then
-    echo "  ✅ Nenhuma secret encontrada!"
+    echo "✅ Nenhuma secret encontrada!"
 else
     echo "::error::❌ Pipeline falhou devido a secrets detectadas! Favor verificar a engine de SCS nos resultados do Checkmarx." >&2
     exit 1
