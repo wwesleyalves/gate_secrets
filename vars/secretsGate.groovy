@@ -13,7 +13,6 @@ def call(Map config = [:]) {
     )
 
     sh """
-      chmod +x gate_secrets.sh
       ./gate_secrets.sh ${report} ${maxAgeDays}
     """
 }
