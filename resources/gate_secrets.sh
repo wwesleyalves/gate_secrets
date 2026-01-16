@@ -163,6 +163,9 @@ check_secrets() {
     if [ "$secrets_ignored_not_exploitable" -gt 0 ]; then
         echo "   ✅ Ignoradas (not exploitable): $secrets_ignored_not_exploitable"
     fi
+    if [ "$secrets_ignored_exception" -gt 0 ]; then
+        echo "   ✅ Ignoradas (exception): $secrets_ignored_exception"
+    fi
     echo ""
 
     # Retornar 1 se houver secrets bloqueadoras
