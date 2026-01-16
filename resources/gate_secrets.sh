@@ -54,7 +54,6 @@ check_secrets() {
     local secrets_ignored_old=0
     local secrets_ignored_not_exploitable=0
     local blocking_secrets_count=0
-    local secrets_ignored_exception=0
 
     echo "🔍 Processando secrets encontradas..."
     echo ""
@@ -62,7 +61,7 @@ check_secrets() {
     # Usar while read para evitar subshell
     while IFS= read -r secret_obj; do
         [ -z "$secret_obj" ] && continue
-        
+
         local status
         local first_found_at
         local state
@@ -96,18 +95,6 @@ check_secrets() {
             if [[ "$state" == "NOT_EXPLOITABLE" ]]; then
                 secrets_ignored_not_exploitable=$((secrets_ignored_not_exploitable + 1))
                 echo "ℹ️  Secret RECURRENT ignorada (marcada como NOT_EXPLOITABLE):"
-                echo "   Arquivo: $filename"
-                echo "   Linha: $line"
-                echo "   Tipo: $ruleName"
-                echo "   Data de detecção: $first_found_at"
-                echo ""
-                continue
-            fi
-            
-        if [[ "$status" == "RECURRENT" ]]; then
-            if [[ "$state" == "Exception" ]]; then
-                secrets_ignored_exception=$((secrets_ignored_exception + 1))
-                echo "ℹ️  Secret RECURRENT ignorada (marcada como Exception):"
                 echo "   Arquivo: $filename"
                 echo "   Linha: $line"
                 echo "   Tipo: $ruleName"
@@ -162,9 +149,6 @@ check_secrets() {
     fi
     if [ "$secrets_ignored_not_exploitable" -gt 0 ]; then
         echo "   ✅ Ignoradas (not exploitable): $secrets_ignored_not_exploitable"
-    fi
-    if [ "$secrets_ignored_exception" -gt 0 ]; then
-        echo "   ✅ Ignoradas (exception): $secrets_ignored_exception"
     fi
     echo ""
 
