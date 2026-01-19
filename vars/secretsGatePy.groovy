@@ -1,7 +1,6 @@
 def call(Map config = [:]) {
 
-    String report   = config.get('report', 'cx_result.json')
-    int maxAgeDays  = config.get('maxAgeDays', 10)
+    String report = config.get('report', 'cx_result.json')
 
     writeFile(
         file: 'gate_secrets.py',
@@ -15,6 +14,6 @@ def call(Map config = [:]) {
       fi
 
       chmod +x gate_secrets.py
-      python3 gate_secrets.py ${report} ${maxAgeDays}
+      python3 gate_secrets.py ${report}
     """
 }
