@@ -21,7 +21,7 @@ def call(Map config = [:]) {
         echo "🪣 Baixando lista de exceções do S3 via AWS CLI..."
         if command -v aws >/dev/null 2>&1; then
             if [ -n "${bucket}" ]; then
-                aws s3 cp "s3://${bucket}/${key}" projects.json || echo "⚠️ Não foi possível baixar exceções — arquivo ignorado."
+                aws s3 cp "s3://${bucket}/exceptions/${key}" projects.json || echo "⚠️ Não foi possível baixar exceções — arquivo ignorado."
             else
                 echo "⚠️ Bucket não configurado — ignorando exceções."
             fi
