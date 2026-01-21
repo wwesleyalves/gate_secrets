@@ -2,9 +2,9 @@ def call(Map config = [:]) {
 
     String report = config.get('report', 'cx_result.json')
 
-    // Variáveis esperadas para exceções via S3
-    String bucket = env.EXCEPTIONS_BUCKET ?: ""
-    String key    = env.EXCEPTIONS_KEY ?: "exceptions.json"
+    // Variáveis esperadas via Jenkinsfile
+    String bucket      = env.EXCEPTIONS_BUCKET ?: ""
+    String key         = env.EXCEPTIONS_KEY ?: "exceptions.json"
     String projectName = env.PROJECT_NAME ?: ""
 
     echo "🔐 Executando Security Gate (Secrets) via Python embutido"
@@ -12,12 +12,41 @@ def call(Map config = [:]) {
     sh """
         set -e
 
+        echo "🐍 Verificando Python3..."
         if ! command -v python3 >/dev/null 2>&1; then
-            echo "⚠️  python3 não encontrado — pipeline continuará sem validação de secrets."
+            echo "⚠️  python3 não encontrado — pipeline continuará SEM validação de secrets."
             exit 0
         fi
 
-        echo "📥 Executando Security Gate interno..."
+        echo "📦 Verificando dependência boto3..."
+
+        # Testa rapidamente se boto3 já está instalado
+        if python3 - << 'EOS'
+try:
+    import boto3
+    print("boto3 OK")
+except ImportError:
+    raise SystemExit(1)
+EOS
+        then
+            echo "✔ boto3 já instalado."
+        else
+            echo "⚠ boto3 não encontrado — instalando agora..."
+            python3 -m ensurepip --user || true
+
+            # tenta instalar boto3 localmente (modo user, sem root)
+            if pip3 install --user boto3; then
+                echo "✔ boto3 instalado com sucesso."
+            else
+                echo "❌ Falha ao instalar boto3 — validação de secrets não será executada."
+                exit 0
+            fi
+
+            # adiciona paths locais, garantindo que boto3 seja encontrado
+            export PYTHONPATH="\$HOME/.local/lib/python3*/site-packages:\$PYTHONPATH"
+        fi
+
+        echo "📥 Executando Security Gate..."
 
         python3 - <<'EOF'
 import json
@@ -46,6 +75,7 @@ def get_exceptions_from_s3(bucket, key):
         data = obj["Body"].read().decode("utf-8")
         json_data = json.loads(data)
         return json_data.get("projects", [])
+
     except Exception as e:
         print(f"⚠️  Falha ao buscar exceções no S3: {e}")
         return []
@@ -57,10 +87,6 @@ def is_project_exception(project, exceptions):
     return proj in normalized
 
 
-# ▼▼▼==============================
-#  AQUI ENTRA O TEU CÓDIGO ORIGINAL
-# (check_secrets meninim abaixo)
-# ==============================▼▼▼
 def check_secrets(json_file):
     if not os.path.isfile(json_file):
         print(f"Arquivo {json_file} não encontrado.")
@@ -109,9 +135,10 @@ def check_secrets(json_file):
     return blocking
 
 
-# ==============================
+# ==========================
 #  EXECUÇÃO PRINCIPAL
-# ==============================
+# ==========================
+
 exceptions = get_exceptions_from_s3(EXC_BUCKET, EXC_KEY)
 
 if is_project_exception(PROJECT, exceptions):
@@ -119,7 +146,6 @@ if is_project_exception(PROJECT, exceptions):
     check_secrets(report_file)
     sys.exit(0)
 
-# Caso normal: aplicar regra de bloqueio
 exit_code = check_secrets(report_file)
 
 if exit_code == 0:
