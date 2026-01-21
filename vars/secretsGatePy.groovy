@@ -4,7 +4,7 @@ def call(Map config = [:]) {
 
     // Variáveis vindas do Jenkinsfile
     String bucket      = env.EXCEPTIONS_BUCKET ?: ""
-    String key         = env.EXCEPTIONS_KEY ?: "exceptions.json"
+    String key         = env.EXCEPTIONS_KEY ?: "projects.json"
     String projectName = env.PROJECT_NAME ?: ""
 
     echo "🔐 Executando Security Gate (Secrets) via Python + AWS CLI"
@@ -21,7 +21,7 @@ def call(Map config = [:]) {
         echo "🪣 Baixando lista de exceções do S3 via AWS CLI..."
         if command -v aws >/dev/null 2>&1; then
             if [ -n "${bucket}" ]; then
-                aws s3 cp "s3://${bucket}/${key}" exceptions.json || echo "⚠️ Não foi possível baixar exceções — arquivo ignorado."
+                aws s3 cp "s3://${bucket}/${key}" projects.json || echo "⚠️ Não foi possível baixar exceções — arquivo ignorado."
             else
                 echo "⚠️ Bucket não configurado — ignorando exceções."
             fi
@@ -43,16 +43,16 @@ PROJECT     = "${projectName}"
 # LEITURA DAS EXCEÇÕES (SEM BOTO3)
 # ==========================
 def load_exceptions():
-    if not os.path.isfile("exceptions.json"):
-        print("⚠️ Arquivo exceptions.json não encontrado — nenhuma exceção aplicada.")
+    if not os.path.isfile("projects.json"):
+        print("⚠️ Arquivo projects.json não encontrado — nenhuma exceção aplicada.")
         return []
 
     try:
-        with open("exceptions.json") as f:
+        with open("projects.json") as f:
             data = json.load(f)
             return data.get("projects", [])
     except Exception as e:
-        print(f"⚠️ Falha ao carregar exceptions.json: {e}")
+        print(f"⚠️ Falha ao carregar projects.json: {e}")
         return []
 
 
