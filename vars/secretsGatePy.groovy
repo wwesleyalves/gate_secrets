@@ -17,12 +17,6 @@ def call(Map config = [:]) {
             exit 0
         fi
 
-        echo "Verificando gate_secrets.py..."
-        if [ ! -f gate_secrets.py ]; then
-            echo "gate_secrets.py não encontrado — abortando validação"
-            exit 0
-        fi
-
         echo "Baixando exceções do S3..."
         if command -v aws >/dev/null 2>&1 && [ -n "${bucket}" ]; then
             aws s3 cp "s3://${bucket}/exceptions/${key}" projects.json \
@@ -34,7 +28,10 @@ def call(Map config = [:]) {
         export PROJECT_NAME="${projectName}"
         export EXCEPTIONS_FILE="projects.json"
 
-        echo "VALIDAÇÃO DE SECRETS"
-        python3 gate_secrets.py "${report}"
+        writeFile(
+            file: 'gate_secrets.py',
+          fi
+          chmod +x gate_secrets.py
+          python3 gate_secrets.py ${report}
     """
 }
